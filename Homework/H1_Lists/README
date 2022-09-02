@@ -1,0 +1,159 @@
+Mogodeanu_Claudiu_311CC_tema1_SD
+
+Tema a fost impartita dupa cum urmeaza:
+- fisier header "all_tasks.h" ce cuprinde anteturile tuturor functiilor
+si definitiile structurilor nod, respectiv lista
+- fisierul main.c, in care se realizeaza citirea si stocarea datelor initiale,
+se lanseaza in executie toate task-urile si se afiseaza rezultatul final
+- fisierul operations.c, ce cuprinde toate functiile basic
+aferente lucrului cu liste
+- fisiere asociate fiecarui subpunct, intitulate conform cu argumentul
+din linia de comanda
+
+README-ul si liniile de cod sunt capped la 80 de caractere pe o linie.
+Timp de implementare: ~5h pt 2.1+2.2+2.3+2.5. La 2.4 ~2h pt intelegerea
+textului si ~45 min implementare.
+
+!! In cazul in care exista vreo problema cu incarcarea pe vmchecker,
+pe masina locala am luat punctaj maxim. Un argument special la compilare
+ar fi -lm datorita utilizarii functiei sqrt.
+
+Structurile utilizate (definite in "all_tasks.h"):
+
+- o structura "node", care cuprinde cate o data obtinuta,
+reprezentata de campurile timestamp si value;
+2 pointeri la structuri de tip nod, pentru a crea lista;
+un camp e1_check care decide validitatea unei date in contextul
+primului subpunct. In functie de valoarea sa se elimina sau nu nodul.
+
+- o structura DoubleLinkedList, definit prin 2 pointeri la structuri:
+head si tail (primul, respectiv ultimul element din lista) si len-lungimea sa
+
+
+Fisierul operations.c:
+
+Cuprinde functiile de parsare a unei liste - toate intorc void:
+
+-init -> aloca memorie pt o lista goala (double pointer pt a se modifica
+pointerul primit, cu unul s-ar fi facut doar o copie) si seteaza totul la 0,
+respectiv NULL pt head si tail
+
+-free_list -> se parcurge toata lista, nod cu nod, iar dupa ce se ajunge la
+nodul imediat urmator, se da free nodului precedent.
+La final se da free listei in sine
+
+-add_at_end -> se creeaza un nod nou si se initializeaza:
+alocare, valori timestamp si value, eligibil pt afisare si pointeri la null;
+Functia adauga noduri doar la final (analizam si cazul separat lista goala),
+iar dupa aceea creste lungimea listei, list->len++.
+
+-add_middle -> se creeaza un nod nou si se initializeaza:
+alocare, valori timestamp si value, eligibil pt afisare si pointeri la null;
+Functia adauga noduri pe pozitii "fara probleme". Pt eficientizare, am vazut
+daca pozitia pe care vrem sa adaugam este mai aproape de head sau de tail.
+
+-removenode -> scoate un nod de pe pozitia n
+Tratam separat cazurile remove se pe prima si ultima pozitie deoarece
+nu trebuie facute toate operatiile obisnuite (nu putem da NULL->prev etc).
+La fel ca in cazul add_middle, analizam daca n este ai aproape de head
+sau de tail, pentru a vedea din ce parte se parcurge mai repede.
+La final dam free nodului respectiv si scadem lungimea listei.
+
+-print_list -> functie de afisare a listei
+good_nodes reprezinta nr curent de noduri din lista.
+se parcurge lista si se afiseaza valorile cu 2 zecimale (rotunjire automata)
+
+
+Task 2.1. ( fisierul e1.c )
+
+Abordarea este de a adauga un camp e1_check in structura,
+care sa decida daca un element va ramane in lista sau nu.
+Nodurile vor ramane in lista pana la stabilirea eligibilitatii tuturor.
+O fereastra este transmisa prin indicele nodului de inceput, chiar daca
+la final nodul din mijloc poate fi declarat neeligibil.
+
+-Functia principala este ex_e1:
+parcurgem toata lista si calculam media si deviatia pt fiecare fereastra.
+Daca nu se indeplinesc conditiile din cerinta, facem e1_check=0 pt elementul
+din mijlocul ferestrei.
+La final, dupa stabilirea eligibilitatii, se scot din lista el. cu check=0.
+
+-average-> calculeaza media aritmetica a valorilor dintr-o fereastra
+start_poz este indicele primului element din fereastra. Intai ne mutam acolo
+si apoi facem calculele pt k elemente.
+
+-deviation-> folosim formula pt a calcula deviatia val dintr-o fereastra
+start_poz este, iar, indicele primului element.
+Ne folosim de functia average pt a pune in av valoarea lui x barat.
+
+
+Task 2.2. ( fisierul e2e3.c )
+
+Am utilizat aceeasi functie principala pt ambele subpuncte (filtrare_med).
+In main decizia este luata de variabila punct2 (aici punct),
+pt a decide tipul de medie dorita.
+Vom crea o lista auxiliara in care punem valorile medii caluclate, impreuna
+cu timestamp-ul elementului din mijloc.
+Vom avea mereu cu k-1 mai putine elemente in lista decat la inceput, asa
+ca stergem k-1 elemente (de la inceput pt simplitate), iar la final am copiat
+din lista auxiliara in cea principala.
+
+-sort_list-> functie care sorteaza o lista
+Am folosit un pivot care merge mai incet si un pointer plimba care parcurge
+restul listei. Scopul este ca la fiecare pas sa aducem cel mai mic element de
+la pivot incolo la pozitia lui pivot. (un fel de metoda bulelor cu aflarea
+celui mai mic element)
+
+-mediana-> pt o fereastra de k elemente incepand de la start_poz,
+adaugam elemente intr-o lista auxiliara, o sortam pe aceasta si returnam
+valoarea din mijloc.
+
+
+Task 2.3. ( fisierul u.c )
+
+Avand in vedere ca ne trebuia valoarea modificata pentru iteratia urmatoare,
+am modificat direct valorile in lista principala.
+Am verificat daca diferenta dintre 2 timestamp-uri se afla intre 100 si 1000,
+daca da -> modificam cu mediile cerute.
+
+
+Task 2.4. ( fisierul c.c )
+
+Functia principala este "completare"
+Parcurgem toata lista, iar daca diferenta este >1000, se intra in procesul
+de completare. Setam de_ajuns sa fie valoarea imediat urmatoare gap-ului
+pe care vrem sa il completam, iar new_time se modifica mereu cu cate 200.
+Adaugam in lista valoarea corespunzatoare (si cu timestamp-ul new_time),
+pe pozitia imediat urmatoare, pana cand new_time va depasi de_ajuns.
+
+-func -> ne intoarce valoarea pe care o mentionam anterior.
+Mutam pointerii l si r sa pointeze la cate o "lista" de k elemente,
+urmand a ne deplasa cu ei in sensul bun (de la left[0] spre k de exemplu)
+Apoi insumam elementele dupa formula data. La final returnam ponderea cu C.
+
+-omega -> calculeaza coeficientul pt i si k oarecare dupa formula.
+
+
+Task 2.5. ( fisierul st.c )
+
+Am ales o abordare matematica, folosind un multiplier. Intai sortam lista
+pentru a avea valorile in ordine, fiind mai usor de lucrat.
+Exista multiplier astfel incat multiplier*delta sa dea capatul inferior
+al fiecarui interval. Am calculat multiplier-ul initial, pentru care produsul
+sa dea capatul inferior absolut.
+Am parcurs sublista pana cand se iese din range-ul unui delta
+si afisam corespunzator.
+Apoi ducem multiplier-ul pana cand va fi aferent pentru urmatorul element.
+Repetam aceste operatiuni pana se termina lista.
+
+
+MAIN-ul ( fisierul main.c )
+
+-Se initiaza o lista si se citeste de la tastatura input-ul, urmand ca
+toate valorile sa fie adaugate in lista in ordine (la final fiecare).
+-Se citeste nr de argumente din linia de comanda si se analizeaza
+fiecare argument in parte
+-daca avem de efectuat taskul 2.5, fortam transformarea numarului din char
+in int folosind atoi. De asemenea, la acest task afisarea se face in functie,
+nu in main. Taskul 2.5 se face mereu ultimul oricum, nu avem nevoie de output.
+-La sfarsit se afiseaza lista finala (daca nu apare stdelta prin argumente) 

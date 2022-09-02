@@ -1,0 +1,141 @@
+Mogodeanu_Claudiu_311CC_tema2_SD
+
+Tema contine doar fisierul main.c, Makefile-ul si README-ul.
+Fisierul main.c este capped la 100 de caractere, iar in cazul in care a fost
+vreun rand mai lung, l-am despartit si am facut o identare corespunzatoare,
+astfel incat sa fie clar ceea ce se dorea a fi facut.
+Readme-ul este capped la 80 de caractere
+
+Precum este specificat si in antetul fisierului main.c, in cadrul fiecarui
+task am realizat o anumita serie de permutari intre structuri de date.
+Timp de implementare: ~12h
+
+Structuri folosite:
+
+QuadtreeNode-> default, componenta a vectorului (vect) utilizat pentru scrierea
+fisierului compressed
+Tree-> structura aferenta unui nod din arbore, contine:
+    -pointeri la copii: tl, tr, bl, br. Acestia sunt NULL daca nodul e frunza
+    -unsigned char-uri red, green si blue. Retin culorile medii ale zonei
+    ilustrate de nodul respectiv
+    -depth: adancimea nodului in cadrul arborelui. Radacina are depth 0
+
+Pentru a reprezenta imaginea, am folosit o matrice de culori (mat),
+Arborele intermediar (tree) este compus din structuri Tree.
+Toate operatiile efectuate pe arbore au fost realizate in mod DFS
+(radacina, top_left, top_right, bottom_right, bottom_left) recursiv.
+Pentru a reprezenta pixelii in fisierul compressed, am construit un vector
+(vect) de structuri QuadtreeNode.
+
+Functii independente de task (pentru lucrul cu arbori):
+
+-init_tree: initializeaza cate un nod de tip Tree, alocand memorie si
+punand copiii initial NULL, iar culorile si adancimea 0.
+-rm_tree: functie care elibereaza recursiv memoria pt un arbore (DFS).
+-insert: functie care ataseaza arborelui un nod nou. Se aloca memorie
+pentru nod, apoi se leaga de tree, unde tree este parintele acestuia.
+poz determina ce copil vrem sa punem:
+1->top_left, 2->top_right, 3->bottom_right, 4->bottom_left
+-count_nodes: calculeaza numarul de noduri pana se ajunge la verificarea
+unui pointer NULL
+-count_leaves: calculeaza numarul de frunze prin verificare daca nodul
+respectiv mai are copii. Daca nodul nu are bottom_left, 
+atunci nu are niciun copil, deci este frunza
+-basic_swap: functie care interschimba 2 pointeri la Tree
+
+main:
+Se parseaza elementele primite in linia de comanda
+si se lanseaza in executie functia eferenta fiecarui task.
+Aceste functii vor primi drept parametru si fisierle de intrare si iesire
+pentru a putea parsa corespunzator. Alocarile si eliberarile vor fi tot
+in cadrul fiecarui task, in main fiind inchise doar fisierele.
+
+Task 1:
+
+Strategia de mutare este: input->matrice->arbore->vector->output
+Perechile RGB din fisierele de tip .ppm au fost salvate intr-o matrice.
+Matricea in care salvam datele este de tip char. Am ales asa deoarece
+tipul char asigura dimensiunea de 1 byte (intuitiv de lucrat si de dat cast)
+Daca este nevoie sa ramanem pe 0 255, se poate da cast la unsigned.
+
+-average: intoarce media pt una din culori (color=0 ->red; 1->green; 2->blue)
+dintr-un patrat incepand de la x_start si y_start, cu latura size.
+Axele functioneaza: y pe verticala (intoarsa cum ar veni) si x pe orizontala.
+Parcurgem 3*j deoarece mereu avem calup de 3 culori.
+Se imparte valoarea totala la arie pentru a obtine media dorita.
+
+-mean: functia care practic intoarce rezultatul formulei prezentate in pdf.
+Se primesc ca parametri matricea cu RGB-urile, coordonatele punctului de start,
+adancimea nodului din arbore si o latura a imaginii mari.
+Calculam latura (size-ul) zonei pe baza adancimii nodului din arbore.
+Aflam media pe patratul respectiv apeland average si insumam conform formulei.
+Castul la unsigned char este pentru siguranta (sa ne situam pe 0-255).
+Se intoarce suma medie pe aria respectiva.
+
+-complete_tree: functie care muta datele din matricea de culori in arbore.
+Aceasta operatiune se realizeaza recursiv DFS.
+Functia primeste: arborele care se doreste a fi completat, factorul taskului
+si aceleasi date ca "mean".
+daca se respecta conditia, se aloca memorie pt nod si se construiesc copiii 
+acestuia cu pozitii de start relative la cea a parintelui.
+initial depth-ul radacinii este 0 si va creste pe masura ce construim
+total este o dimensiune a imaginii intregi. Facem defaul copiii NULL pentru
+a ramane asa daca nu vom mai adauga alte noduri. Inseram (alocam) un nod
+si repetam recursiv. 1->top_left, 2->top_right, 3->bottom_right, 4->bottom_left
+
+-generate_vector: functie care creeaza un vector vect din arborele tree.
+Se adauga datele din nodul curent pe pozitia poz din vector.
+area este calculata in functie de adancimea nodului:
+area=total1/(1<<(tree->depth*2)); total 1 este aria mare a imaginii
+Default punem indicii copiilor ca fiind -1. Daca acestia sunt NULL,
+indicii vor ramane nemodificati.
+Altfel, inpunem o formula pe baza numarului de noduri din subarbori
+si a pozitiei parintelui pentru a calcula direct indicii copiilor.
+Continuam recusiv DFS.
+
+-compress: citeste imaginea din fisier si lanseaza in executie functiile
+anterioare, generrand la final un vector de QuadtreeNodes. Functia elibereaza
+si memoria pt matrice, arbore si vector.
+
+Task 2:
+
+Strategia de mutare este: input->vector->arbore->matrice->output
+Se citeste intr-un vector de QuadtreeNodes inputul. Punem in arbore
+si apoi intr-o matrice, pe care o afisam.
+
+-move_to_tree: se muta din vect in tree. 
+poz reprezinta pozitia din vector de unde luam datele.
+Se iau culorile direct, iar depthul se calculeaza automat.
+Daca nodul are copii, se va aloca memorie si se vor pune copiii
+de la pozitia corespunzatoare din vector pe nivelul urmator in tree.
+
+-move_to_mat: functie care transpune arborele in matricea de RGB-uri 
+("imaginea propriu-zisa"). Se primesc punctele de start si sizeul
+este calculat pe baza adancimii din arbore. Se atribuie valorile rgb
+din arbore fiecarui "calup de cate 3" din matrice. Recursiv, se vor pune copiii
+
+-write_image: functie care primeste matricea de RGB-uri, fisierul de iesire
+si dimensiunile imaginii. Se construieste si antetul fisierului .ppm,
+la care se adauga datele din matrice.
+
+-decompress: functia principala a task-ului 2. Citeste de la tastatura
+vectorul vect binar, il transpune in arbore, apoi in matrice si formeaza
+imaginea. Structurile vect, tree si mat sunt initializate si
+eliberate in interiorul functiei. Dimensiunile matricei sunt aflate ca fiind
+radical din aria primului element din vector (adica radacina, care descrie,
+de fapt, toata imaginea).
+
+Task 3:
+
+Strategia de mutare este: input->matrice->arbore->arbore modif.->matrice->output
+Pentru a roti imaginea se interschimba recursiv anumite parti din ea.
+Pentru a roti orizontal: Interschimbam recursiv stanga cu dreapta,
+adica top_left cu top_right si bottom_left cu bottom_right.
+Pentru a oglindi vertical: rotim imaginea cu totul, adica Interschimbam
+pe diagonala (completely) si formam rezultatul dorit prin rotire orizontala
+(aveam functia deja facuta). Sincer, am vrut doar sa vad daca imi iese, iar
+raspunsul a fost afirmativ. 
+mirror: functia principala ce se foloseste de cele de la taskurile anterioare
+pentru a genera un arbore, o matrice si de a scrie imaginea ppm.
+type=1 -> orizontala;
+type=2 -> verticala
